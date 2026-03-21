@@ -1,0 +1,14 @@
+# build output
+test_rb
+app
+*.o
+*.out
+
+# logs
+*.log
+
+# editor
+.vscode/
+
+# OS
+.DS_Store
