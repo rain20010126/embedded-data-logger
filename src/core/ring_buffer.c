@@ -3,7 +3,7 @@
 #include "ring_buffer.h"
 
 // initialize ring buffer
-int rb_init(RingBuffer *rb, size_t capacity) {
+int rb_init(ring_buffer_t *rb, size_t capacity) {
     if (capacity < 2) return -1;  // need at least 2 slots
 
     rb->buffer = (int *)malloc(sizeof(int) * capacity);
@@ -17,23 +17,23 @@ int rb_init(RingBuffer *rb, size_t capacity) {
 }
 
 // free memory
-void rb_free(RingBuffer *rb) {
+void rb_free(ring_buffer_t *rb) {
     free(rb->buffer);
     rb->buffer = NULL;
 }
 
 // check if empty
-int rb_empty(RingBuffer *rb) {
+int rb_empty(ring_buffer_t *rb) {
     return rb->head == rb->tail;
 }
 
 // check if full
-int rb_full(RingBuffer *rb) {
+int rb_full(ring_buffer_t *rb) {
     return (rb->head + 1) % rb->capacity == rb->tail;
 }
 
 // push data
-int rb_push(RingBuffer *rb, int data) {
+int rb_push(ring_buffer_t *rb, int data) {
     if (rb_full(rb)) {
         return -1;  // buffer full
     }
@@ -45,7 +45,7 @@ int rb_push(RingBuffer *rb, int data) {
 }
 
 // pop data
-int rb_pop(RingBuffer *rb, int *data) {
+int rb_pop(ring_buffer_t *rb, int *data) {
     if (rb_empty(rb)) {
         return -1;  // buffer empty
     }

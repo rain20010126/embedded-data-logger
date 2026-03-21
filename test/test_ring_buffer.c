@@ -2,7 +2,7 @@
 #include "ring_buffer.h"
 
 int main() {
-    RingBuffer rb;
+    ring_buffer_t rb;
 
     if (rb_init(&rb, 5) != 0) {
         printf("Init failed\n");
