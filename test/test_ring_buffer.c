@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include "ring_buffer.h"
+#include "sensor_data.h"
 
 int main() {
     ring_buffer_t rb;
@@ -10,18 +11,32 @@ int main() {
     }
 
     printf("Pushing...\n");
-    for (int i = 0; i <= 4; i++) {
-        if (rb_push(&rb, i) == 0)
-            printf("push %d\n", i);
+
+    // push sensor_data_t instead of int
+    for (int i = 0; i < 6; i++) {
+        sensor_data_t data;
+
+        data.timestamp = i * 100;     // fake timestamp
+        data.temperature  = 2500 + i;    // e.g. 25.00°C → 2500
+
+        if (rb_push(&rb, data) == 0)
+            printf("push t=%u temp=%.2f\n",
+                   data.timestamp,
+                   data.temperature / 100.0);
         else
             printf("push failed (full)\n");
     }
 
     printf("\nPopping...\n");
-    int val;
+
+    sensor_data_t val;
+
     while (!rb_empty(&rb)) {
         rb_pop(&rb, &val);
-        printf("pop %d\n", val);
+
+        printf("pop t=%u temp=%.2f\n",
+               val.timestamp,
+               val.temperature / 100.0);
     }
 
     rb_free(&rb);
