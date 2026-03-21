@@ -1,17 +1,15 @@
 CC = gcc
 CFLAGS = -Iinclude -Wall -Wextra 
 
-# =====================
-# FILES
-# =====================
-
 # source files
-CORE_SRC = src/core/ring_buffer.c src/core/logger.c
+CORE_SRC = src/core/ring_buffer.c src/core/logger.c 
+SENSOR_SRC = src/sensor/temp_sensor.c
 APP_SRC  = src/main.c
 TEST_SRC = test/test_ring_buffer.c
 
 # object files
 CORE_OBJ = $(CORE_SRC:.c=.o)
+SENSOR_OBJ = $(SENSOR_SRC:.c=.o)
 APP_OBJ  = $(APP_SRC:.c=.o)
 TEST_OBJ = $(TEST_SRC:.c=.o)
 
@@ -23,7 +21,7 @@ TEST = test_rb
 
 all: $(APP)
 
-$(APP): $(CORE_OBJ) $(APP_OBJ)
+$(APP): $(CORE_OBJ) $(SENSOR_OBJ) $(APP_OBJ)
 	$(CC) $(CFLAGS) $^ -o $@
 
 $(TEST): src/core/ring_buffer.o $(TEST_OBJ)
