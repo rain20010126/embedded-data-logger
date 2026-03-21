@@ -1,28 +1,35 @@
 CC = gcc
-CFLAGS = -Iinclude -Wall -Wextra
+CFLAGS = -Iinclude -Wall -Wextra 
 
-# core modules
-CORE = src/core/ring_buffer.c
+CORE = src/core/ring_buffer.c src/core/logger.c
 
-# test target
-TEST_SRC = $(CORE) test/test_ring_buffer.c
-TEST_OUT = test_rb
+# main app
+APP = app
+APP_SRC = $(CORE) src/main.c
 
-.PHONY: all test run app clean
+# test
+TEST = test_rb
+TEST_SRC = src/core/ring_buffer.c test/test_ring_buffer.c
 
-# default target
-all: test
+.PHONY: all run run_app clean
 
-# build test executable
-test: $(TEST_OUT)
+# default = run app
+all: $(APP)
 
-$(TEST_OUT): $(TEST_SRC)
-	$(CC) $(CFLAGS) $(TEST_SRC) -o $(TEST_OUT)
+# build app
+$(APP):
+	$(CC) $(CFLAGS) $(APP_SRC) -o $(APP)
 
-# run test
-run: test
-	./$(TEST_OUT)
+# run app
+run: $(APP)
+	./$(APP)
 
-# clean build files
+# build test
+test:
+	$(CC) $(CFLAGS) $(TEST_SRC) -o $(TEST)
+
+run_test: test
+	./$(TEST)
+
 clean:
-	rm -f $(TEST_OUT)
+	rm -f $(APP) $(TEST)
