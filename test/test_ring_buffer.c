@@ -10,7 +10,7 @@ int main() {
     }
 
     printf("Pushing...\n");
-    for (int i = 1; i <= 4; i++) {
+    for (int i = 0; i <= 4; i++) {
         if (rb_push(&rb, i) == 0)
             printf("push %d\n", i);
         else
