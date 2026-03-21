@@ -2,6 +2,9 @@
 #include "ring_buffer.h"
 #include "logger.h"
 #include "sensor_data.h"
+#include "temp_sensor.h"
+
+uint32_t fake_time = 0;
 
 void pc_output(const char *msg) {
     printf("%s", msg);
@@ -14,16 +17,18 @@ int main() {
     rb_init(&rb, 10);
     logger_init(&logger, &rb, pc_output);
 
-    // fake sensor data
-    for (int i = 0; i < 5; i++) {
+    while (1) {
+        // 1. read sensor
         sensor_data_t data;
-        data.timestamp = i;
-        data.temperature = 25.0 + i;
+        data.temperature = temp_sensor_read();
+        data.timestamp = fake_time++;
 
+        // 2. push to buffer
         rb_push(&rb, data);
-    }
 
-    logger_process(&logger);
+        // 3. process logger
+        logger_process(&logger);
+    }
 
     return 0;
 }
