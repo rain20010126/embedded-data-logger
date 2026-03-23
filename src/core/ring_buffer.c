@@ -34,7 +34,7 @@ int rb_full(ring_buffer_t *rb) {
 }
 
 // push data
-int rb_push(ring_buffer_t *rb, sensor_data_t data) {
+int rb_push(ring_buffer_t *rb, log_data_t data) {
     if (rb_full(rb)) {
         return -1;  // buffer full
     }
@@ -47,7 +47,7 @@ int rb_push(ring_buffer_t *rb, sensor_data_t data) {
 }
 
 // pop data
-int rb_pop(ring_buffer_t *rb, sensor_data_t *data) {
+int rb_pop(ring_buffer_t *rb, log_data_t *data) {
     if (rb->size == 0) {
         return -1;
     }

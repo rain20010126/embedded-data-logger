@@ -17,16 +17,25 @@ int main() {
     rb_init(&rb, 10);
     logger_init(&logger, &rb, pc_output);
 
+    sensor_init(); 
+
+    uint32_t fake_time = 0;
+
     while (1) {
-        // 1. read sensor
-        sensor_data_t data;
-        data.temperature = temp_sensor_read();
-        data.timestamp = fake_time++;
+        log_data_t log;
 
-        // 2. push to buffer
-        rb_push(&rb, data);
+        // 1. read sensor (抽象層)
+        if (sensor_read(&log.sensor) != 0) {
+            continue;
+        }
 
-        // 3. process logger
+        // 2. add timestamp（system layer）
+        log.timestamp = fake_time++;
+
+        // 3. push to buffer
+        rb_push(&rb, log);
+
+        // 4. process logger
         logger_process(&logger);
     }
 

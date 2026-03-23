@@ -4,8 +4,15 @@
 #include <stdint.h>
 
 typedef struct {
-    uint32_t timestamp;
-    int temperature;
+    int16_t temperature;   // °C * 100
+    int16_t humidity;      // %RH * 100
+    int32_t pressure;      // Pa
+    int32_t gas;           // ohm (or raw)
 } sensor_data_t;
+
+typedef struct {
+    uint32_t timestamp;
+    sensor_data_t sensor;
+} log_data_t;
 
 #endif

@@ -5,7 +5,7 @@
 #include "sensor_data.h"
 
 typedef struct {
-    sensor_data_t *buffer;
+    log_data_t *buffer;
     size_t head;
     size_t tail;
     size_t capacity;
@@ -19,10 +19,10 @@ int rb_init(ring_buffer_t *rb, size_t capacity);
 void rb_free(ring_buffer_t *rb);
 
 // push data into buffer
-int rb_push(ring_buffer_t *rb, sensor_data_t data);
+int rb_push(ring_buffer_t *rb, log_data_t data);
 
 // pop data from buffer
-int rb_pop(ring_buffer_t *rb, sensor_data_t *data);
+int rb_pop(ring_buffer_t *rb, log_data_t *data);
 
 // check if empty
 int rb_empty(ring_buffer_t *rb);
