@@ -15,15 +15,11 @@ void logger_process(logger_t *logger) {
 
         if (rb_pop(logger->rb, &data) == 0) {
 
-            sprintf(buf, "[%u] T=%d.%02d H=%d.%02d P=%d G=%d\n",
+            sprintf(buf, "[%lu] T=%d.%02d\n",
                 data.timestamp,
                 data.sensor.temperature / 100,
-                data.sensor.temperature % 100,
-                data.sensor.humidity / 100,
-                data.sensor.humidity % 100,
-                data.sensor.pressure,
-                data.sensor.gas);
-                
+                data.sensor.temperature % 100);
+
             logger->output(buf);
         }
     }

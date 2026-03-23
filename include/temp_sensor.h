@@ -3,8 +3,7 @@
 
 #include <stdint.h>
 
+int sensor_init(void);
 int sensor_read(sensor_data_t *data);
-
-void sensor_init(void);
 
 #endif
