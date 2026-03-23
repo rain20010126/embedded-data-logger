@@ -56,7 +56,7 @@ int sensor_init(void)
     return read_calibration();
 }
 
-int sensor_read(float *temperature)
+int sensor_read(sensor_data_t *data)
 {
     uint8_t reg = 0x22;
     uint8_t buf[3];
@@ -83,7 +83,7 @@ int sensor_read(float *temperature)
     int32_t temp_comp = ((t_fine * 5) + 128) >> 8;
 
     // convert to float
-    *temperature = temp_comp / 100.0f;
+    data->temperature = temp_comp / 100.0f;
 
     return 0;
 }
