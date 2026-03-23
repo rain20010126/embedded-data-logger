@@ -1,97 +1,126 @@
 #include "sensor_data.h"
 #include "temp_sensor.h"
-#include <stdlib.h>
 #include "i2c.h"
+#include <stdint.h>
+#include <stdio.h>
 
-// BME680 I2C address
-#define BME680_ADDR (0x77 << 1)
+#define BME680_ADDR (0x76 << 1)
 
-// calibration parameters
+// calibration
 static uint16_t dig_T1;
-static int16_t dig_T2;
-static int8_t  dig_T3;
+static int16_t  dig_T2;
+static int8_t   dig_T3;
 
 static int32_t t_fine;
 
-// read calibration
+// ========================
+// I2C write
+// ========================
+
+static int i2c_write(uint8_t reg, uint8_t val)
+{
+    uint8_t buf[2] = {reg, val};
+    return HAL_I2C_Master_Transmit(&hi2c1, BME680_ADDR, buf, 2, 100);
+}
+
+// ========================
+// Read calibration (FINAL)
+// ========================
+
 static int read_calibration(void)
 {
-    uint8_t buf[2];
+    uint8_t calib1[25];
+    uint8_t calib2[16];
 
-    // par_t1 (0xE9, 0xEA)
-    uint8_t reg = 0xE9;
-    HAL_I2C_Master_Transmit(&hi2c1, BME680_ADDR, &reg, 1, 100);
-    HAL_I2C_Master_Receive(&hi2c1, BME680_ADDR, buf, 2, 100);
-    dig_T1 = (buf[1] << 8) | buf[0];
+    if (HAL_I2C_Mem_Read(&hi2c1, BME680_ADDR, 0x89,
+                         I2C_MEMADD_SIZE_8BIT, calib1, 25, 100) != HAL_OK)
+        return -1;
 
-    // par_t2 (0x8A, 0x8B)
-    reg = 0x8A;
-    HAL_I2C_Master_Transmit(&hi2c1, BME680_ADDR, &reg, 1, 100);
-    HAL_I2C_Master_Receive(&hi2c1, BME680_ADDR, buf, 2, 100);
-    dig_T2 = (buf[1] << 8) | buf[0];
+    if (HAL_I2C_Mem_Read(&hi2c1, BME680_ADDR, 0xE1,
+                         I2C_MEMADD_SIZE_8BIT, calib2, 16, 100) != HAL_OK)
+        return -1;
 
-    // par_t3 (0x8C)
-    reg = 0x8C;
-    HAL_I2C_Master_Transmit(&hi2c1, BME680_ADDR, &reg, 1, 100);
-    HAL_I2C_Master_Receive(&hi2c1, BME680_ADDR, buf, 1, 100);
-    dig_T3 = (int8_t)buf[0];
+    // correct mapping + little endian
+    dig_T1 = (uint16_t)(calib2[8] | (calib2[9] << 8));
+
+    dig_T2 = (int16_t)(((int16_t)calib1[2] << 8) | calib1[1]);
+
+    dig_T3 = (int8_t)calib1[2];
+
+    printf("T1=%u T2=%d T3=%d\n", dig_T1, dig_T2, dig_T3);
 
     return 0;
 }
 
+// ========================
+// Init
+// ========================
+
 int sensor_init(void)
 {
-    uint8_t reg, val;
+    uint8_t id;
 
-    // set oversampling
-    reg = 0x74; // ctrl_meas
-    val = 0x2C; // temp x2, forced mode
-
-    if (HAL_I2C_Master_Transmit(&hi2c1, BME680_ADDR, &reg, 1, 100) != HAL_OK)
+    // soft reset
+    if (i2c_write(0xE0, 0xB6) != HAL_OK)
         return -1;
 
-    if (HAL_I2C_Master_Transmit(&hi2c1, BME680_ADDR, &val, 1, 100) != HAL_OK)
+    HAL_Delay(10);
+
+    // read chip id
+    if (HAL_I2C_Mem_Read(&hi2c1, BME680_ADDR, 0xD0,
+                         I2C_MEMADD_SIZE_8BIT, &id, 1, 100) != HAL_OK)
         return -1;
 
-    return read_calibration();
+    printf("chip id = 0x%02X\n", id);
+
+    if (id != 0x61)
+        return -1;
+
+    // read calibration
+    if (read_calibration() != 0)
+        return -1;
+
+    return 0;
 }
+
+// ========================
+// Read temperature
+// ========================
 
 int sensor_read(sensor_data_t *data)
 {
-    uint8_t reg, val;
     uint8_t buf[3];
 
-    // trigger measurement
-    reg = 0x74;      // ctrl_meas
-    val = 0x2D;      // temp oversampling x2 + forced mode
-
-    if (HAL_I2C_Master_Transmit(&hi2c1, BME680_ADDR, &reg, 1, 100) != HAL_OK)
+    // config register (recommended)
+    if (i2c_write(0x75, 0x00) != HAL_OK)
         return -1;
 
-    if (HAL_I2C_Master_Transmit(&hi2c1, BME680_ADDR, &val, 1, 100) != HAL_OK)
+    // ctrl_meas:
+    // osrs_t = x1 (001)
+    // mode = forced (01)
+    // => 001 00 01 = 0x25
+    if (i2c_write(0x74, 0x25) != HAL_OK)
         return -1;
 
-    // wait for measurement
     HAL_Delay(50);
 
-    // read raw temperature
-    reg = 0x22;
-
-    if (HAL_I2C_Master_Transmit(&hi2c1, BME680_ADDR, &reg, 1, 100) != HAL_OK)
-        return -1;
-
-    if (HAL_I2C_Master_Receive(&hi2c1, BME680_ADDR, buf, 3, 100) != HAL_OK)
+    // read temperature registers
+    if (HAL_I2C_Mem_Read(&hi2c1, BME680_ADDR, 0x22,
+                         I2C_MEMADD_SIZE_8BIT, buf, 3, 100) != HAL_OK)
         return -1;
 
     int32_t adc_T =
-        (buf[0] << 12) |
-        (buf[1] << 4) |
-        (buf[2] >> 4);
+        ((int32_t)buf[0] << 12) |
+        ((int32_t)buf[1] << 4) |
+        ((int32_t)buf[2] >> 4);
 
-    // compensation formula
-    int32_t var1 = ((int32_t)adc_T >> 3) - ((int32_t)dig_T1 << 1);
-    int32_t var2 = (var1 * (int32_t)dig_T2) >> 11;
-    int32_t var3 = (((var1 >> 1) * (var1 >> 1)) >> 12) * ((int32_t)dig_T3 << 4) >> 14;
+    // compensation (official formula)
+    int32_t var1, var2, var3;
+
+    var1 = (((int32_t)adc_T >> 3) - ((int32_t)dig_T1 << 1));
+    var2 = (var1 * (int32_t)dig_T2) >> 11;
+    var3 = (((var1 >> 1) * (var1 >> 1)) >> 12);
+    var3 = (var3 * ((int32_t)dig_T3 << 4)) >> 14;
 
     t_fine = var2 + var3;
 

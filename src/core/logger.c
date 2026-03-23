@@ -20,7 +20,7 @@ void logger_process(logger_t *logger) {
             int decimal = abs(temp % 100);
 
             snprintf(buf, sizeof(buf),
-                     "[%lu] T=%d.%02d\n",
+                     "[%lu] T=%d.%02d\r\n",
                      data.timestamp,
                      integer,
                      decimal);
