@@ -15,7 +15,7 @@ void logger_process(logger_t *logger) {
 
         if (rb_pop(logger->rb, &data) == 0) {
 
-            sprintf(buf, "[%u] temp=%.2f\n",
+            sprintf(buf, "[%u] temp=%d.%02d\n",
                     data.timestamp,
                     data.temperature / 100);
 
