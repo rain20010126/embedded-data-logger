@@ -24,7 +24,7 @@ int main() {
     while (1) {
         log_data_t log;
 
-        // 1. read sensor (抽象層)
+        // 1. read sensor
         if (sensor_read(&log.sensor) != 0) {
             continue;
         }
