@@ -5,7 +5,7 @@
 
 typedef struct {
     uint32_t timestamp;
-    float temperature;
+    int temperature;
 } sensor_data_t;
 
 #endif
