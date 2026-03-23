@@ -58,10 +58,25 @@ int sensor_init(void)
 
 int sensor_read(sensor_data_t *data)
 {
-    uint8_t reg = 0x22;
+    uint8_t reg, val;
     uint8_t buf[3];
 
-    // raw temperature
+    // trigger measurement
+    reg = 0x74;      // ctrl_meas
+    val = 0x2D;      // temp oversampling x2 + forced mode
+
+    if (HAL_I2C_Master_Transmit(&hi2c1, BME680_ADDR, &reg, 1, 100) != HAL_OK)
+        return -1;
+
+    if (HAL_I2C_Master_Transmit(&hi2c1, BME680_ADDR, &val, 1, 100) != HAL_OK)
+        return -1;
+
+    // wait for measurement
+    HAL_Delay(50);
+
+    // read raw temperature
+    reg = 0x22;
+
     if (HAL_I2C_Master_Transmit(&hi2c1, BME680_ADDR, &reg, 1, 100) != HAL_OK)
         return -1;
 
@@ -69,11 +84,11 @@ int sensor_read(sensor_data_t *data)
         return -1;
 
     int32_t adc_T =
-    (buf[0] << 12) |
-    (buf[1] << 4) |
-    (buf[2] >> 4);
+        (buf[0] << 12) |
+        (buf[1] << 4) |
+        (buf[2] >> 4);
 
-    // datasheet formula
+    // compensation formula
     int32_t var1 = ((int32_t)adc_T >> 3) - ((int32_t)dig_T1 << 1);
     int32_t var2 = (var1 * (int32_t)dig_T2) >> 11;
     int32_t var3 = (((var1 >> 1) * (var1 >> 1)) >> 12) * ((int32_t)dig_T3 << 4) >> 14;
@@ -82,8 +97,7 @@ int sensor_read(sensor_data_t *data)
 
     int32_t temp_comp = ((t_fine * 5) + 128) >> 8;
 
-    // convert to float
-    data->temperature = temp_comp / 100.0f;
+    data->temperature = temp_comp;
 
     return 0;
 }

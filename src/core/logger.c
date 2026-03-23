@@ -15,10 +15,15 @@ void logger_process(logger_t *logger) {
 
         if (rb_pop(logger->rb, &data) == 0) {
 
-            sprintf(buf, "[%lu] T=%d.%02d\n",
-                data.timestamp,
-                data.sensor.temperature / 100,
-                data.sensor.temperature % 100);
+            int temp = data.sensor.temperature;
+            int integer = temp / 100;
+            int decimal = abs(temp % 100);
+
+            snprintf(buf, sizeof(buf),
+                     "[%lu] T=%d.%02d\n",
+                     data.timestamp,
+                     integer,
+                     decimal);
 
             logger->output(buf);
         }
