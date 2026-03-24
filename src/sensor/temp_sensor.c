@@ -60,26 +60,36 @@ int sensor_init(void)
 {
     uint8_t id;
 
+    printf("sensor_init start\n");
+
     // soft reset
-    if (i2c_write(0xE0, 0xB6) != HAL_OK)
+    if (i2c_write(0xE0, 0xB6) != HAL_OK) {
+        printf("reset failed\n");
         return -1;
+    }
 
     HAL_Delay(10);
 
     // read chip id
     if (HAL_I2C_Mem_Read(&hi2c1, BME680_ADDR, 0xD0,
-                         I2C_MEMADD_SIZE_8BIT, &id, 1, 100) != HAL_OK)
+                         I2C_MEMADD_SIZE_8BIT, &id, 1, 100) != HAL_OK) {
+        printf("read chip id failed\n");
         return -1;
+    }
 
     printf("chip id = 0x%02X\n", id);
 
-    if (id != 0x61)
+    if (id != 0x61) {
+        printf("wrong chip id\n");
         return -1;
+    }
 
-    // read calibration
-    if (read_calibration() != 0)
+    if (read_calibration() != 0) {
+        printf("calibration failed\n");
         return -1;
+    }
 
+    printf("sensor init OK\n");
     return 0;
 }
 
