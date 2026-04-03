@@ -3,6 +3,7 @@
 #include "i2c.h"
 #include <stdint.h>
 #include <stdio.h>
+#include "i2c_driver.h"
 
 #define BME680_ADDR (0x76 << 1)
 
@@ -19,8 +20,7 @@ static int32_t t_fine;
 
 static int i2c_write(uint8_t reg, uint8_t val)
 {
-    uint8_t buf[2] = {reg, val};
-    return HAL_I2C_Master_Transmit(&hi2c1, BME680_ADDR, buf, 2, 100);
+    return i2c_write_reg(BME680_ADDR, reg, val);
 }
 
 // ========================
