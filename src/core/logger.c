@@ -16,14 +16,19 @@ void logger_process(logger_t *logger) {
         if (rb_pop(logger->rb, &data) == 0) {
 
             int temp = data.sensor.temperature;
+
             int integer = temp / 100;
             int decimal = abs(temp % 100);
 
+            uint32_t sec = data.timestamp / 1000;
+            uint32_t ms  = data.timestamp % 1000;
+
             snprintf(buf, sizeof(buf),
-                     "[%lu] T=%d.%02d\r\n",
-                     data.timestamp,
-                     integer,
-                     decimal);
+                    "[t=%lu.%03lus] T=%d.%02d\r\n",
+                    sec,
+                    ms,
+                    integer,
+                    decimal);
 
             logger->output(buf);
         }

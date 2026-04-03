@@ -32,13 +32,27 @@ static int read_calibration(void)
     uint8_t calib1[25];
     uint8_t calib2[16];
 
-    if (HAL_I2C_Mem_Read(&hi2c1, BME680_ADDR, 0x89,
-                         I2C_MEMADD_SIZE_8BIT, calib1, 25, 100) != HAL_OK)
-        return -1;
+    // if (HAL_I2C_Mem_Read(&hi2c1, BME680_ADDR, 0x89,
+    //                      I2C_MEMADD_SIZE_8BIT, calib1, 25, 100) != HAL_OK)
+    //     return -1;
 
-    if (HAL_I2C_Mem_Read(&hi2c1, BME680_ADDR, 0xE1,
-                         I2C_MEMADD_SIZE_8BIT, calib2, 16, 100) != HAL_OK)
+    // if (HAL_I2C_Mem_Read(&hi2c1, BME680_ADDR, 0xE1,
+    //                      I2C_MEMADD_SIZE_8BIT, calib2, 16, 100) != HAL_OK)
+    //     return -1;
+
+    printf("step1\n");
+    if (i2c_read_reg(BME680_ADDR, 0x89, calib1, 25) != 0)
+    {
+        printf("read1 fail\n");
         return -1;
+    }
+
+    printf("step2\n");
+    if (i2c_read_reg(BME680_ADDR, 0xE1, calib2, 16) != 0)
+    {
+        printf("read2 fail\n");
+        return -1;
+    }
 
     // correct mapping + little endian
     dig_T1 = (uint16_t)(calib2[8] | (calib2[9] << 8));
@@ -71,8 +85,7 @@ int sensor_init(void)
     HAL_Delay(10);
 
     // read chip id
-    if (HAL_I2C_Mem_Read(&hi2c1, BME680_ADDR, 0xD0,
-                         I2C_MEMADD_SIZE_8BIT, &id, 1, 100) != HAL_OK) {
+    if (i2c_read_reg(BME680_ADDR, 0xD0, &id, 1) != 0) {
         printf("read chip id failed\n");
         return -1;
     }
@@ -115,8 +128,7 @@ int sensor_read(sensor_data_t *data)
     HAL_Delay(50);
 
     // read temperature registers
-    if (HAL_I2C_Mem_Read(&hi2c1, BME680_ADDR, 0x22,
-                         I2C_MEMADD_SIZE_8BIT, buf, 3, 100) != HAL_OK)
+    if (i2c_read_reg(BME680_ADDR, 0x22, buf, 3) != 0)
         return -1;
 
     int32_t adc_T =
