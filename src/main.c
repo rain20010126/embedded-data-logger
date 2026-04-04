@@ -25,7 +25,7 @@ int main() {
         log_data_t log;
 
         // 1. read sensor
-        if (sensor_read(&log.sensor) != 0) {
+        if (sensor_read_temperature(&log.sensor) != 0) {
             continue;
         }
 
